@@ -89,7 +89,7 @@ public class RenderAPI {
         Main.batch.setColor(new Color(rgba));
         float offsetX =  (float)Math.sin(angle) * (thickness / 2);
         float offsetY = -(float)Math.cos(angle) * (thickness / 2);
-        y1 = Gdx.graphics.getHeight() - y1 - translateY;
-        Main.batch.draw(regionPixel, x1 + offsetX, y1 + offsetY, 0, 0, length, thickness, 1, 1, angle);
+        y1 = Gdx.graphics.getHeight() - y1;
+        Main.batch.draw(regionPixel, x1 + offsetX + translateX, y1 + offsetY - translateY, 0, 0, length, thickness, 1, 1, angle);
     }
 }

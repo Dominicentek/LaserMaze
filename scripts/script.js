@@ -5,6 +5,7 @@ use("controller.js");
 use("renderer.js");
 use("console.js");
 use("viewport.js");
+use("queue.js");
 
 // === CONSTANTS ===
 
@@ -378,6 +379,8 @@ function loop() {
     if (uiScreen == UI_NONE) process_objects();
     render_game();
     render_ui();
+
+    queue.process();
 }
 
 // renders the whole game
@@ -404,6 +407,9 @@ function render_ui() {
     if (uiScreen != UI_NONE) render_rect(0, 0, viewport.width(), viewport.height(), 0x0000007F);
     switch (uiScreen) {
         case UI_NONE:
+            if (gui_button("Reset", -5, 5, TOP_RIGHT)) {
+                load_level(currentLevel);
+            }
             break;
         case UI_TITLE_SCREEN:
             render_logo();
@@ -415,8 +421,16 @@ function render_ui() {
             }
             break;
         case UI_LEVEL_COMPLETED:
+            if (gui_button("Next", 0,  0, 256, 48, CENTER_CENTER)) {
+                uiScreen = UI_NONE;
+                load_level(++currentLevel);
+            }
             break;
         case UI_GAME_COMPLETED:
+            render_text("very epok u win :D", viewport.width() / 2 - 280, 40, 0xFFFFFFFF, 4);
+            if (gui_button("Quit", 0,  0, 256, 48, CENTER_CENTER)) {
+                Java.type("java.lang.System").exit(0);
+            }
             break;
     }
 }
@@ -516,6 +530,8 @@ function render_logo() {
     render_logo_line(16   , 3, 17   , 3);
     render_logo_line(16   , 1, 16   , 3);
 
+    queue.process("line"); // run all queued renderer.line calls, so that the logo gets drawn in front of everything
+
     renderer.translate(0, -60);
 }
 
@@ -585,6 +601,11 @@ function emit_laser(x, y, dir) {
 
                 // emit it
                 emit_laser(out.x, out.y, reverseAngleTable[angle]);
+                break;
+            case "laser_receiver":
+                queue.schedule("level_end", function() {
+                    uiScreen = levelData.length - 1 == currentLevel ? UI_GAME_COMPLETED : UI_LEVEL_COMPLETED;
+                }, 10);
                 break;
         }
     }
@@ -676,9 +697,8 @@ function render_logo_line(x1, y1, x2, y2) {
     var Y2 = y2 - Math.sin(angle) * 10000;
 
     // render the actual line
-    var color = (rng(200, 255) << 24) | 0xFF;
-    renderer.line(X1, Y1, X2, Y2, color, 1);
-    renderer.line(x1, y1, x2, y2, color, 4);
+    renderer.line(X1, Y1, X2, Y2, (rng(100, 155) << 24) | 0xFF, 1);
+    queue.append("line_" + x1 + "," + y1 + "," + x2 + "," + y2, renderer.line, [x1, y1, x2, y2, (rng(200, 255) << 24) | 0xFF, 4]); // we'll call this later
 }
 
 // renders text
@@ -841,4 +861,4 @@ function rng(min, max) {
 
 // === INIT ===
 
-load_level(0);
+load_level(currentLevel);
