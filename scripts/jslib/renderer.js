@@ -19,10 +19,7 @@ var renderer = {
     translate: function(x, y) {
         Java.type("com.lasermaze.RenderAPI").translate(x, y);
     },
-    reset_scale: function() {
-        Java.type("com.lasermaze.RenderAPI").resetScale();
-    },
-    scale: function(x, y) {
-        Java.type("com.lasermaze.RenderAPI").scale(x, y);
+    line: function(x1, y1, x2, y2, color, thickness) {
+        Java.type("com.lasermaze.RenderAPI").renderLine(x1, y1, x2,  y2, color, default_value(thickness, 1));
     }
 };

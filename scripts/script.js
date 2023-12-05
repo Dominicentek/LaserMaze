@@ -29,6 +29,12 @@ var BOTTOM_LEFT   = 6;
 var BOTTOM_CENTER = 7;
 var BOTTOM_RIGHT  = 8;
 
+// ui screens
+var UI_NONE            = 0;
+var UI_TITLE_SCREEN    = 1;
+var UI_LEVEL_COMPLETED = 2;
+var UI_GAME_COMPLETED  = 3;
+
 // tables
 var flipTable = table_builder() // flipped = flipTable[dir];
     (NW, SW) (NE, SE) (SW, NW) (SE, NE)
@@ -80,6 +86,7 @@ var currentTilemap = [];
 var currentObjects = [];
 var laserDrawList = [];
 var currdir = NW;
+var uiScreen = UI_TITLE_SCREEN;
 
 // angle conversions
 var DEG2RAD = Math.PI / 180;
@@ -368,15 +375,7 @@ var tileFuncs = [
 function loop() {
     controller.query();
 
-    if (controller.pressed(62)) {
-        currdir++;
-        if (currdir == 8) currdir = 4;
-    }
-    var originX = viewport.width()  / 2 - tilemapWidth  * 16;
-    var originY = viewport.height() / 2 - tilemapHeight * 16;
-    emit_laser((controller.mouseX - originX) / 32, (controller.mouseY - originY) / 32, currdir);
-
-    process_objects();
+    if (uiScreen == UI_NONE) process_objects();
     render_game();
     render_ui();
 }
@@ -402,7 +401,24 @@ function render_game() {
 
 // render ui
 function render_ui() {
-    
+    if (uiScreen != UI_NONE) render_rect(0, 0, viewport.width(), viewport.height(), 0x0000007F);
+    switch (uiScreen) {
+        case UI_NONE:
+            break;
+        case UI_TITLE_SCREEN:
+            render_logo();
+            if (gui_button("Start", 0,  0, 256, 48, CENTER_CENTER)) {
+                uiScreen = UI_NONE;
+            }
+            if (gui_button("Quit",  0, 56, 256, 48, CENTER_CENTER)) {
+                Java.type("java.lang.System").exit(0);
+            }
+            break;
+        case UI_LEVEL_COMPLETED:
+            break;
+        case UI_GAME_COMPLETED:
+            break;
+    }
 }
 
 function render_level() {
@@ -443,6 +459,64 @@ function render_objects() {
     for (var i = 0; i < currentObjects.length; i++) {
         if (currentObjects[i].hasOwnProperty("funcRender")) currentObjects[i].funcRender(currentObjects[i]);
     }
+}
+
+// render the game's logo
+function render_logo() {
+    renderer.translate(0, 60);
+
+    // L
+    render_logo_line(0    , 1, 0    , 3);
+    render_logo_line(0    , 3, 1    , 3);
+
+    // A
+    render_logo_line(2    , 3, 2.5  , 1);
+    render_logo_line(2.5  , 1, 3    , 3);
+    render_logo_line(2.25 , 2, 2.75 , 2);
+
+    // S
+    render_logo_line(4    , 1, 5    , 1);
+    render_logo_line(4    , 2, 5    , 2);
+    render_logo_line(4    , 3, 5    , 3);
+    render_logo_line(4    , 1, 4    , 2);
+    render_logo_line(5    , 2, 5    , 3);
+
+    // E
+    render_logo_line(6    , 1, 7    , 1);
+    render_logo_line(6    , 2, 7    , 2);
+    render_logo_line(6    , 3, 7    , 3);
+    render_logo_line(6    , 1, 6    , 3);
+
+    // R
+    render_logo_line(8    , 1, 8    , 3);
+    render_logo_line(8    , 2, 9    , 2);
+    render_logo_line(8    , 1, 9    , 1);
+    render_logo_line(9    , 1, 9    , 2);
+    render_logo_line(9    , 3, 8    , 2);
+
+    // M
+    render_logo_line(10   , 1, 10   , 3);
+    render_logo_line(11   , 1, 11   , 3);
+    render_logo_line(10   , 1, 10.5 , 2);
+    render_logo_line(11   , 1, 10.5 , 2);
+
+    // A
+    render_logo_line(12   , 3, 12.5 , 1);
+    render_logo_line(12.5 , 1, 13   , 3);
+    render_logo_line(12.25, 2, 12.75, 2);
+
+    // Z
+    render_logo_line(14   , 1, 15   , 1);
+    render_logo_line(14   , 3, 15   , 3);
+    render_logo_line(14   , 3, 15   , 1);
+
+    // E
+    render_logo_line(16   , 1, 17   , 1);
+    render_logo_line(16   , 2, 17   , 2);
+    render_logo_line(16   , 3, 17   , 3);
+    render_logo_line(16   , 1, 16   , 3);
+
+    renderer.translate(0, -60);
 }
 
 // === LASER FUNCTIONS ===
@@ -522,7 +596,7 @@ function emit_laser(x, y, dir) {
 // renders the laser
 function render_laser() {
     for (var i = 0; i < laserDrawList.length; i++) {
-        render_line(laserDrawList[i].x1 * 32, laserDrawList[i].y1 * 32, laserDrawList[i].x2 * 32, laserDrawList[i].y2 * 32, 0xFF0000FF);
+        renderer.line(laserDrawList[i].x1 * 32, laserDrawList[i].y1 * 32, laserDrawList[i].x2 * 32, laserDrawList[i].y2 * 32, 0xFF0000FF);
     }
     laserDrawList = [];
 }
@@ -540,18 +614,17 @@ function gui_button(text, x, y, w, h, alignment) {
     x = apply_alignment(x, w, viewport.width(),  alignmentTable[alignment][0]);
     y = apply_alignment(y, h, viewport.height(), alignmentTable[alignment][1]);
 
+    var hover = controller.mouseX >= x     && controller.mouseY >= y &&
+                controller.mouseX <  x + w && controller.mouseY <  y + h;
+
     // render the button
-    render_rect(x, y, w, h, 0xFFFFFF00 | (controller.clicked ? 0x7F : 0x3F));
-    renderer.scale(2, 2);
-    var textX = (x / 2 - w / 2) / 2;
-    var textY = (y / 2 - h / 2) / 2;
-    render_text(text, textX, textY, 0xFFFFFFFF);
-    renderer.reset_scale();
+    render_rect(x, y, w, h, 0xFFFFFF00 | (hover ? 0x7F : 0x3F));
+    var textX = w / 2 - text.length * 7;
+    var textY = h / 2 - 14;
+    render_text(text, x + textX, y + textY, 0xFFFFFFFF, 2);
 
     // check if clicked
-    return controller.mouseX >= x     && controller.mouseY >= y     &&
-           controller.mouseX <  x + w && controller.mouseY <  y + h &&
-           controller.clicked;
+    return hover && controller.clicked;
 }
 
 // === UTILITY ===
@@ -581,29 +654,49 @@ function render_multigradient(x, y, w, h, tl, tr, bl, br) {
     renderer.render();
 }
 
-// renders a line
-function render_line(x1, y1, x2, y2, color) {
-    renderer.polygon();
-    renderer.vertex(x1, y1, color);
-    renderer.vertex(x2, y2, color);
-    renderer.vertex(x2 + 1, y2, color);
-    renderer.vertex(x1 + 1, y1, color);
-    renderer.render();
+// renders a special line seen in the logo
+function render_logo_line(x1, y1, x2, y2) {
+    var scale = 30;
+
+    // center
+    x1 += viewport.width() / scale / 2 - 17 / 2;
+    x2 += viewport.width() / scale / 2 - 17 / 2;
+
+    // scale
+    x1 *= scale;
+    y1 *= scale;
+    x2 *= scale;
+    y2 *= scale;
+
+    // calculate angles and stuff
+    var angle = Math.atan2(y1 - y2, x1 - x2);
+    var X1 = x1 + Math.cos(angle) * 10000;
+    var Y1 = y1 + Math.sin(angle) * 10000;
+    var X2 = x2 - Math.cos(angle) * 10000;
+    var Y2 = y2 - Math.sin(angle) * 10000;
+
+    // render the actual line
+    var color = (rng(200, 255) << 24) | 0xFF;
+    renderer.line(X1, Y1, X2, Y2, color, 1);
+    renderer.line(x1, y1, x2, y2, color, 4);
 }
 
 // renders text
-function render_text(text, x, y, color) {
+function render_text(text, x, y, color, scale) {
     color = default_value(color, 0xFFFFFFFF);
+    scale = default_value(scale, 1);
     renderer.texture("font.png");
+    var w = 7 * scale;
+    var h = 14 * scale;
     for (var i = 0; i < text.length; i++) {
         var char = text.charCodeAt(i);
         var tx = char % 16;
         var ty = Math.floor(char / 16) - 2;
         renderer.polygon();
-        renderer.vertex(x     + i * 7, y,      color,  tx      / 16,  ty      / 6);
-        renderer.vertex(x + 7 + i * 7, y,      color, (tx + 1) / 16,  ty      / 6);
-        renderer.vertex(x + 7 + i * 7, y + 14, color, (tx + 1) / 16, (ty + 1) / 6);
-        renderer.vertex(x     + i * 7, y + 14, color,  tx      / 16, (ty + 1) / 6);
+        renderer.vertex(x     + i * w, y,     color,  tx      / 16,  ty      / 6);
+        renderer.vertex(x + w + i * w, y,     color, (tx + 1) / 16,  ty      / 6);
+        renderer.vertex(x + w + i * w, y + h, color, (tx + 1) / 16, (ty + 1) / 6);
+        renderer.vertex(x     + i * w, y + h, color,  tx      / 16, (ty + 1) / 6);
         renderer.render();
     }
     renderer.texture(null);
@@ -739,6 +832,11 @@ function table_builder() {
         return func;
     }
     return func;
+}
+
+// returns a random number between min and max inclusive
+function rng(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 // === INIT ===

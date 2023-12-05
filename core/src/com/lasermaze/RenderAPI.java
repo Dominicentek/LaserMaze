@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ShortArray;
@@ -19,15 +20,15 @@ public class RenderAPI {
     private static HashMap<String, Texture> textureCache = new HashMap<>();
     private static boolean renderingPolygon = false;
     private static final Texture pixel;
+    private static final TextureRegion regionPixel;
     private static Texture texture;
     private static float translateX = 0;
     private static float translateY = 0;
-    private static float scaleX = 0;
-    private static float scaleY = 0;
     static {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.drawPixel(0, 0, 0xFFFFFFFF);
         pixel = new Texture(pixmap);
+        regionPixel = new TextureRegion(pixel);
     }
     public static void polygon() {
         if (renderingPolygon) return;
@@ -82,12 +83,13 @@ public class RenderAPI {
         translateX = 0;
         translateY = 0;
     }
-    public static void scale(float x, float y) {
-        scaleX *= x;
-        scaleY *= y;
-    }
-    public static void resetScale() {
-        scaleX = 0;
-        scaleY = 0;
+    public static void renderLine(float x1, float y1, float x2, float y2, int rgba, float thickness) {
+        float length = (float)Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+        float angle = -(float)Math.toDegrees(Math.atan2(y2 - y1, x2 - x1));
+        Main.batch.setColor(new Color(rgba));
+        float offsetX =  (float)Math.sin(angle) * (thickness / 2);
+        float offsetY = -(float)Math.cos(angle) * (thickness / 2);
+        y1 = Gdx.graphics.getHeight() - y1 - translateY;
+        Main.batch.draw(regionPixel, x1 + offsetX, y1 + offsetY, 0, 0, length, thickness, 1, 1, angle);
     }
 }
