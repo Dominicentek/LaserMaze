@@ -37,9 +37,19 @@ var UI_LEVEL_COMPLETED = 2;
 var UI_GAME_COMPLETED  = 3;
 
 // tables
-var flipTable = table_builder() // flipped = flipTable[dir];
-    (NW, SW) (NE, SE) (SW, NW) (SE, NE)
-    (UP, DOWN) (LEFT, RIGHT) (DOWN, UP) (RIGHT, LEFT)
+var flipTable = table_builder() // flipped = flipTable[vertical][dir];
+    (false, table_builder()
+        (NW, SW)
+        (NE, SE)
+        (SW, NW)
+        (SE, NE)
+    ())
+    (true, table_builder()
+        (NW, NE)
+        (NE, NW)
+        (SW, SE)
+        (SE, SW)
+    ())
 ();
 
 var angleTable = table_builder() // angle = angleTable[dir]
@@ -88,6 +98,7 @@ var currentObjects = [];
 var laserDrawList = [];
 var currdir = NW;
 var uiScreen = UI_TITLE_SCREEN;
+var laserColor = 0;
 
 // angle conversions
 var DEG2RAD = Math.PI / 180;
@@ -98,30 +109,25 @@ var RAD2DEG = 180 / Math.PI;
 var levelData = [
     {
         tilemap: [
-            0,0,0,0,0,0,1,0,0,0,
-            0,1,0,2,0,0,0,0,0,0,
-            3,1,0,0,0,0,1,0,1,1,
-            0,1,1,1,0,0,1,0,1,1,
-            0,1,1,1,0,0,1,0,0,1,
-            0,1,1,1,5,1,1,0,0,1,
-            0,0,3,0,0,1,0,0,0,0,
-            0,0,1,1,0,0,1,1,5,5,
-            0,0,1,0,0,1,0,0,0,0,
-            0,0,0,0,1,1,0,0,0,1,
+            0,0,0,1,0,0,0,
+            0,0,0,2,0,0,0,
+            0,0,0,1,0,0,0,
+            1,1,1,1,0,0,0,
+            1,1,1,1,0,0,0,
+            1,0,2,0,0,0,0,
+            1,0,0,0,1,0,0
         ],
         objects: [
-            { id: "player", x: 0, y: 0, funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
-            { id: "laser_emitter", x: 2.5, y: 3, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render, dir: UP, flip: false },
-            { id: "mirror", x: 3.5, y: 1, attached: { x: 3, y: 1 }, funcRender: obj_mirror_render, vertical: false },
-            { id: "laser_receiver", x: 7, y: 4.5, funcRender: obj_laser_receiver_render, dir: RIGHT },
-            { id: "blue_portal", x: 5.5, y: 0, funcRender: obj_blue_portal_render, dir: DOWN },
-            { id: "orange_portal", x: 8.5, y: 4, funcRender: obj_orange_portal_render, dir: DOWN },
-            { id: "button", x: 4, y: 3, funcUpdate: obj_button_update, funcRender: obj_button_render },
+            { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render },
+            { id: "laser_emitter", x: 4, y: 1.5, dir: RIGHT, flip: false, attached: { x: 3, y: 1 }, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
+            { id: "mirror", x: 7, y: 1.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 2.5, y: 5, vertical: false, attached: { x: 2, y: 5 }, funcRender: obj_mirror_render },
+            { id: "laser_receiver", x: 4, y: 3.5, dir: RIGHT, funcRender: obj_laser_receiver_render }
         ],
-        spawnX: 0,
-        spawnY: 0,
-        width: 10,
-        height: 10
+        spawnX: 1,
+        spawnY: 1,
+        width: 7,
+        height: 7
     }
 ];
 
@@ -376,6 +382,9 @@ var tileFuncs = [
 function loop() {
     controller.query();
 
+    // get new laser color
+    laserColor = (rng(200, 255) << 24) | 0xFF;
+
     if (uiScreen == UI_NONE) process_objects();
     render_game();
     render_ui();
@@ -581,7 +590,7 @@ function emit_laser(x, y, dir) {
             case "mirror":
                 endX = currentObjects[i].x;
                 endY = currentObjects[i].y;
-                emit_laser(currentObjects[i].x, currentObjects[i].y, flipTable[dir]);
+                emit_laser(currentObjects[i].x, currentObjects[i].y, flipTable[currentObjects[i].vertical][dir]);
                 break;
             case "blue_portal":
             case "orange_portal":
@@ -617,7 +626,7 @@ function emit_laser(x, y, dir) {
 // renders the laser
 function render_laser() {
     for (var i = 0; i < laserDrawList.length; i++) {
-        renderer.line(laserDrawList[i].x1 * 32, laserDrawList[i].y1 * 32, laserDrawList[i].x2 * 32, laserDrawList[i].y2 * 32, 0xFF0000FF);
+        renderer.line(laserDrawList[i].x1 * 32, laserDrawList[i].y1 * 32, laserDrawList[i].x2 * 32, laserDrawList[i].y2 * 32, laserColor);
     }
     laserDrawList = [];
 }
@@ -697,8 +706,8 @@ function render_logo_line(x1, y1, x2, y2) {
     var Y2 = y2 - Math.sin(angle) * 10000;
 
     // render the actual line
-    renderer.line(X1, Y1, X2, Y2, (rng(100, 155) << 24) | 0xFF, 1);
-    queue.append("line_" + x1 + "," + y1 + "," + x2 + "," + y2, renderer.line, [x1, y1, x2, y2, (rng(200, 255) << 24) | 0xFF, 4]); // we'll call this later
+    renderer.line(X1, Y1, X2, Y2, laserColor - 64, 1);
+    queue.append("line_" + x1 + "," + y1 + "," + x2 + "," + y2, renderer.line, [x1, y1, x2, y2, laserColor, 4]); // we'll call this later
 }
 
 // renders text
