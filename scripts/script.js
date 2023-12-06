@@ -88,7 +88,7 @@ var alignmentTable = table_builder() // alignment = alignmentTable[alignmentCons
 
 // === VARIABLES ===
 
-var currentLevel = 0;
+var currentLevel = 1;
 var playerPosX = 0;
 var playerPosY = 0;
 var tilemapWidth = 0;
@@ -109,6 +109,42 @@ var RAD2DEG = 180 / Math.PI;
 var levelData = [
     {
         tilemap: [
+            0,0,0,1,0,0,0,0,0,0,0,
+            0,0,0,1,0,0,0,2,0,0,0,
+            0,0,0,1,0,0,0,2,0,0,0,
+            1,2,1,1,1,3,1,1,1,2,1,
+            0,0,0,0,0,0,0,1,1,0,1,
+            0,0,0,0,0,0,0,1,1,0,1,
+            0,0,0,0,0,0,0,1,1,0,1,
+            1,1,1,1,1,1,1,1,1,0,1,
+            1,1,1,1,0,0,0,0,0,0,0,
+            1,1,1,1,0,0,0,0,0,0,0,
+            1,1,1,1,0,0,0,0,0,0,0,
+        ],
+        objects: [
+            { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
+            { id: "button", x: 3, y: 5, funcUpdate: obj_button_update, funcRender: obj_button_render },
+            { id: "barrier", x: 9, y: 5, funcRender: obj_barrier_render, priority: -1 },
+            { id: "laser_emitter", x: 9.5, y: 4, attached: { x: 9, y: 3 }, dir: DOWN, flipped: false, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
+            { id: "mirror", x: 6.5, y: 11, vertical: false, funcRender: obj_mirror_render },
+            { id: "laser_receiver", x: 4, y: 8.5, dir: RIGHT, funcRender: obj_laser_receiver_render },
+            { id: "text", text: "Use WSAD to move", x: 2.5, y: 1.25, funcRender: obj_text_render },
+            { id: "text", text: "You can push tiles", x: -0.5, y: 0.1, funcRender: obj_text_render },
+            { id: "text", text: "that are not shaded", x: -0.5, y: 0.6, funcRender: obj_text_render },
+            { id: "text", text: "Buttons close and open doors", x: 0.5, y: 6.25, funcRender: obj_text_render },
+            { id: "text", text: "This glass doesn't let you move through", x: 10.5, y: 5.1, funcRender: obj_text_render },
+            { id: "text", text: "However, it lets pushable tiles and lasers", x: 10.5, y: 5.6, funcRender: obj_text_render },
+            { id: "text", text: "Some objects are attached to pushables", x: 10.5, y: 3.25, funcRender: obj_text_render },
+            { id: "text", text: "This mirror bounces the laser", x: 6.5, y: 11.5, funcRender: obj_text_render },
+            { id: "text", text: "Whenever the laser hits a receiver, the level ends", x: 4.5, y: 8.25, funcRender: obj_text_render },
+        ],
+        spawnX: 1,
+        spawnY: 1,
+        width: 11,
+        height: 11
+    },
+    {
+        tilemap: [
             0,0,0,1,0,0,0,
             0,0,0,2,0,0,0,
             0,0,0,1,0,0,0,
@@ -118,7 +154,7 @@ var levelData = [
             1,0,0,0,1,0,0
         ],
         objects: [
-            { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render },
+            { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
             { id: "laser_emitter", x: 4, y: 1.5, dir: RIGHT, flip: false, attached: { x: 3, y: 1 }, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
             { id: "mirror", x: 7, y: 1.5, vertical: true, funcRender: obj_mirror_render },
             { id: "mirror", x: 2.5, y: 5, vertical: false, attached: { x: 2, y: 5 }, funcRender: obj_mirror_render },
@@ -184,7 +220,7 @@ function obj_laser_emitter_update(obj) {
                  NW, SW,
                  SW, SE,
                  SE, NE ];
-    var dir = dirs[obj.dir * 2 + obj.flip];
+    var dir = dirs[obj.dir * 2 + obj.flipped];
     emit_laser(obj.x, obj.y, dir);
 }
 
@@ -329,6 +365,18 @@ function obj_button_render(obj) {
     renderer.texture(null);
 }
 
+function obj_barrier_render(obj) {
+    if (get_tile(obj.x, obj.y) == 2) return;
+    renderer.texture(null);
+    render_rect(obj.x * 32, obj.y * 32, 32, 32, 0x7F0000FF);
+}
+
+function obj_text_render(obj) {
+    var color = default_value(obj.color, 0xFFFFFFFF);
+    var scale = default_value(obj.scale, 1);
+    render_text(obj.text, obj.x * 32, obj.y * 32, color, scale);
+}
+
 // === TILE FUNCTIONS ===
 
 function tile_air(dir) { return false; }
@@ -336,32 +384,33 @@ function tile_wall(dir) { return true; }
 
 function tile_pushable(dir, x, y) {
     // get push destination
-    var x = default_value(x, playerPosX);
-    var y = default_value(y, playerPosY);
+    x = default_value(x, playerPosX);
+    y = default_value(y, playerPosY);
+    var origX = x;
+    var origY = y;
     if (dir == UP)    y--;
     if (dir == LEFT)  x--;
     if (dir == DOWN)  y++;
     if (dir == RIGHT) x++;
 
     // check if solid
-    var tile = tileFuncs[get_tile(x, y)](dir, x, y);
-    if (tile != 0 && tile != 4) return true;
+    if (tileFuncs[get_tile(x, y)](dir, x, y)) return true;
 
     // push
     set_tile(x, y, 2);
-    set_tile(playerPosX, playerPosY, 0);
+    set_tile(origX, origY, 0);
 
     // process attached objects
     for (var i = 0; i < currentObjects.length; i++) {
         if (!currentObjects[i].hasOwnProperty("attached")) continue;
         var attached = currentObjects[i].attached;
-        if (attached.x != playerPosX || attached.y != playerPosY) continue;
+        if (attached.x != origX || attached.y != origY) continue;
 
         // push them
         currentObjects[i].attached.x = x;
         currentObjects[i].attached.y = y;
-        currentObjects[i].x += x - playerPosX;
-        currentObjects[i].y += y - playerPosY;
+        currentObjects[i].x += x - origX;
+        currentObjects[i].y += y - origY;
     }
     
     return false;
@@ -372,8 +421,7 @@ var tileFuncs = [
     tile_wall,
     tile_pushable,
     tile_wall,
-    tile_air,
-    tile_wall
+    tile_air
 ];
 
 // === MAIN GAME FUNCTIONS ===
@@ -422,14 +470,19 @@ function render_ui() {
             break;
         case UI_TITLE_SCREEN:
             render_logo();
-            if (gui_button("Start", 0,  0, 256, 48, CENTER_CENTER)) {
+            if (gui_button("Start", 0, -56, 256, 48, CENTER_CENTER)) {
                 uiScreen = UI_NONE;
+            }
+            if (gui_button("Tutorial", 0, 0, 256, 48, CENTER_CENTER)) {
+                uiScreen = UI_NONE;
+                load_level(currentLevel = 0);
             }
             if (gui_button("Quit",  0, 56, 256, 48, CENTER_CENTER)) {
                 Java.type("java.lang.System").exit(0);
             }
             break;
         case UI_LEVEL_COMPLETED:
+            render_text("level completed :)", viewport.width() / 2 - 280, 40, 0xFFFFFFFF, 4);
             if (gui_button("Next", 0,  0, 256, 48, CENTER_CENTER)) {
                 uiScreen = UI_NONE;
                 load_level(++currentLevel);
@@ -451,7 +504,6 @@ function render_level() {
             var tile = currentTilemap[y * tilemapWidth + x];
             if (tile != 0 && tile != 4) {
                 if (tile == 3) render_rect(x * 32, y * 32, 32, 32, 0x1F1F1FFF);
-                if (tile == 5) render_rect(x * 32, y * 32, 32, 32, 0x7F0000FF);
                 continue;
             }
 
@@ -560,7 +612,7 @@ function emit_laser(x, y, dir) {
         for (var Y = -1; Y <= tilemapHeight; Y++) {
             // check intersection
             var tile = get_tile(X, Y);
-            if (tile == 0 || tile == 4 || tile == 5) continue;
+            if (tile == 0 || tile == 4) continue;
             var intersect = line_rect_intersect(x, y, endX, endY, X, Y, 1, 1);
             if (intersect == null) continue;
             
