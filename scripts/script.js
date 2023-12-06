@@ -407,7 +407,7 @@ function render_ui() {
     if (uiScreen != UI_NONE) render_rect(0, 0, viewport.width(), viewport.height(), 0x0000007F);
     switch (uiScreen) {
         case UI_NONE:
-            if (gui_button("Reset", -5, 5, TOP_RIGHT)) {
+            if (gui_button("Reset", -5, 5, 80, 80, TOP_RIGHT)) {
                 load_level(currentLevel);
             }
             break;
