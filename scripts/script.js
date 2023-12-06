@@ -155,7 +155,7 @@ var levelData = [
         ],
         objects: [
             { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
-            { id: "laser_emitter", x: 4, y: 1.5, dir: RIGHT, flip: false, attached: { x: 3, y: 1 }, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
+            { id: "laser_emitter", x: 4, y: 1.5, dir: RIGHT, flipped: false, attached: { x: 3, y: 1 }, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
             { id: "mirror", x: 7, y: 1.5, vertical: true, funcRender: obj_mirror_render },
             { id: "mirror", x: 2.5, y: 5, vertical: false, attached: { x: 2, y: 5 }, funcRender: obj_mirror_render },
             { id: "laser_receiver", x: 4, y: 3.5, dir: RIGHT, funcRender: obj_laser_receiver_render }
