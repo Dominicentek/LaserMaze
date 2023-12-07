@@ -215,6 +215,17 @@ function obj_player_update(obj) {
     else if (controller.pressed(29)) { playerPosX--; direction = LEFT  } // A
     else if (controller.pressed(32)) { playerPosX++; direction = RIGHT } // D
 
+    // check for barrier objects
+    for (var i = 0; i < currentObjects.length; i++) {
+        if (currentObjects[i].id != "barrier") continue;
+        var distance = Math.sqrt((currentObjects[i].x - playerPosX) * (currentObjects[i].x - playerPosX) + (currentObjects[i].y - playerPosY) * (currentObjects[i].y - playerPosY));
+        if (distance < 0.25) { // we hit the barrier
+            playerPosX = prevPosX;
+            playerPosY = prevPosY;
+            return;
+        }
+    }
+
     // execute tile function
     // if it returns true, then cancel the player's movement
     if (tileFuncs[get_tile(playerPosX, playerPosY)](direction)) {
