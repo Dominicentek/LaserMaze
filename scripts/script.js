@@ -99,6 +99,7 @@ var laserDrawList = [];
 var currdir = NW;
 var uiScreen = UI_TITLE_SCREEN;
 var laserColor = 0;
+var textHidden = true;
 
 // angle conversions
 var DEG2RAD = Math.PI / 180;
@@ -109,17 +110,17 @@ var RAD2DEG = 180 / Math.PI;
 var levelData = [
     {
         tilemap: [
-            0,0,0,1,0,0,0,0,0,0,0,
-            0,0,0,1,0,0,0,2,0,0,0,
-            0,0,0,1,0,0,0,2,0,0,0,
-            1,2,1,1,1,3,1,1,1,2,1,
-            0,0,0,0,0,0,0,1,1,0,1,
-            0,0,0,0,0,0,0,1,1,0,1,
-            0,0,0,0,0,0,0,1,1,0,1,
-            1,1,1,1,1,1,1,1,1,0,1,
-            1,1,1,1,0,0,0,0,0,0,0,
-            1,1,1,1,0,0,0,0,0,0,0,
-            1,1,1,1,0,0,0,0,0,0,0,
+            0,0,0,1,0,0,0,0,0,0,0,0,
+            0,0,0,1,0,0,0,2,0,0,0,0,
+            0,0,0,1,0,0,0,2,0,0,0,0,
+            1,2,1,1,1,3,1,1,1,2,1,0,
+            0,0,0,0,0,0,0,1,1,0,1,0,
+            0,0,0,0,0,0,0,1,1,0,1,0,
+            0,0,0,0,0,0,0,1,1,0,1,0,
+            1,1,1,1,0,2,2,0,1,0,1,0,
+            0,0,0,1,0,0,0,0,0,0,0,0,
+            0,0,0,1,0,0,0,0,0,0,0,0,
+            0,0,0,1,0,0,0,0,0,0,0,0,
         ],
         objects: [
             { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
@@ -127,7 +128,13 @@ var levelData = [
             { id: "barrier", x: 9, y: 5, funcRender: obj_barrier_render, priority: -1 },
             { id: "laser_emitter", x: 9.5, y: 4, attached: { x: 9, y: 3 }, dir: DOWN, flipped: false, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
             { id: "mirror", x: 6.5, y: 11, vertical: false, funcRender: obj_mirror_render },
-            { id: "laser_receiver", x: 4, y: 8.5, dir: RIGHT, funcRender: obj_laser_receiver_render },
+            { id: "laser_receiver", x: 5.5, y: 8, attached: { x: 5, y: 7 }, dir: DOWN, funcRender: obj_laser_receiver_render },
+            { id: "blue_portal", x: 4, y: 8.5, dir: RIGHT, funcRender: obj_blue_portal_render },
+            { id: "orange_portal", x: 1.5, y: 11, dir: UP, funcRender: obj_orange_portal_render },
+            { id: "mirror", x: 0, y: 9.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 1.5, y: 8, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 3, y: 9.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "barrier", x: 4, y: 7, funcRender: obj_barrier_render, priority: -1 },
             { id: "text", text: "Use WSAD to move", x: 2.5, y: 1.25, funcRender: obj_text_render },
             { id: "text", text: "You can push tiles", x: -0.5, y: 0.1, funcRender: obj_text_render },
             { id: "text", text: "that are not shaded", x: -0.5, y: 0.6, funcRender: obj_text_render },
@@ -135,12 +142,13 @@ var levelData = [
             { id: "text", text: "This glass doesn't let you move through", x: 10.5, y: 5.1, funcRender: obj_text_render },
             { id: "text", text: "However, it lets pushable tiles and lasers", x: 10.5, y: 5.6, funcRender: obj_text_render },
             { id: "text", text: "Some objects are attached to pushables", x: 10.5, y: 3.25, funcRender: obj_text_render },
-            { id: "text", text: "This mirror bounces the laser", x: 6.5, y: 11.5, funcRender: obj_text_render },
+            { id: "text", text: "This mirror bounces the laser", x: 6.5, y: 11.25, funcRender: obj_text_render },
             { id: "text", text: "Whenever the laser hits a receiver, the level ends", x: 4.5, y: 8.25, funcRender: obj_text_render },
+            { id: "text", text: "Portals teleport lasers", x: 0, y: 11.25, funcRender: obj_text_render }
         ],
         spawnX: 1,
         spawnY: 1,
-        width: 11,
+        width: 12,
         height: 11
     },
     {
@@ -294,10 +302,11 @@ function obj_laser_emitter_render(obj) {
 
 function obj_mirror_render(obj, color) {
     color = default_value(color, 0xAFAFAFFF);
+    var vertical = default_value(obj.vertical, !(obj.dir == UP || obj.dir == DOWN));
     renderer.translate(obj.x * 32, obj.y * 32);
     renderer.texture(null);
     renderer.polygon();
-    if (obj.vertical) {
+    if (vertical) {
         renderer.vertex(-4, -16, color);
         renderer.vertex(-4,  16, color);
         renderer.vertex( 4,  16, color);
@@ -372,6 +381,7 @@ function obj_barrier_render(obj) {
 }
 
 function obj_text_render(obj) {
+    if (textHidden) return;
     var color = default_value(obj.color, 0xFFFFFFFF);
     var scale = default_value(obj.scale, 1);
     render_text(obj.text, obj.x * 32, obj.y * 32, color, scale);
@@ -467,6 +477,9 @@ function render_ui() {
             if (gui_button("Reset", -5, 5, 80, 80, TOP_RIGHT)) {
                 load_level(currentLevel);
             }
+            if (!textHidden) if (gui_button("Hide Text", -90, 5, 160, 80, TOP_RIGHT)) {
+                textHidden = true;
+            }
             break;
         case UI_TITLE_SCREEN:
             render_logo();
@@ -475,6 +488,7 @@ function render_ui() {
             }
             if (gui_button("Tutorial", 0, 0, 256, 48, CENTER_CENTER)) {
                 uiScreen = UI_NONE;
+                textHidden = false;
                 load_level(currentLevel = 0);
             }
             if (gui_button("Quit",  0, 56, 256, 48, CENTER_CENTER)) {
