@@ -101,6 +101,9 @@ var uiScreen = UI_TITLE_SCREEN;
 var laserColor = 0;
 var textHidden = true;
 
+// this value is used in button initialization to give each button a unique number
+var buttonID = 0;
+
 // angle conversions
 var DEG2RAD = Math.PI / 180;
 var RAD2DEG = 180 / Math.PI;
@@ -172,6 +175,38 @@ var levelData = [
         spawnY: 1,
         width: 7,
         height: 7
+    },
+    {
+        tilemap: [
+            0,0,0,0,0,0,0,1,1,1,1,
+            0,0,0,2,0,0,0,1,0,0,0,
+            0,0,0,0,0,0,0,1,0,0,0,
+            1,3,1,1,1,1,1,1,0,2,0,
+            0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,1,0,1,1,1,2,0,0,
+            0,0,0,1,0,1,0,1,0,1,1,
+            0,0,0,1,0,0,2,2,0,0,0,
+            1,1,1,1,0,2,0,1,0,0,0,
+            1,1,1,1,0,0,1,1,1,1,1,
+        ],
+        objects: [
+            { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
+            { id: "barrier", x: 5, y: 9, funcRender: obj_barrier_render },
+            { id: "barrier", x: 8, y: 3, funcRender: obj_barrier_render },
+            { id: "barrier", x: 9, y: 3, funcRender: obj_barrier_render },
+            { id: "barrier", x: 10, y: 3, funcRender: obj_barrier_render },
+            { id: "barrier", x: 8, y: 7, funcRender: obj_barrier_render },
+            { id: "button", x: 5, y: 1, funcUpdate: obj_button_update, funcRender: obj_button_render, priority: -1 },
+            { id: "button", x: 9, y: 2, funcUpdate: obj_button_update, funcRender: obj_button_render, priority: -1 },
+            { id: "laser_emitter", x: 3, y: 1.5, attached: { x: 3, y: 1 }, dir: LEFT, flipped: true, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
+            { id: "laser_receiver", x: 1.5, y: 10, dir: UP, funcRender: obj_laser_receiver_render }
+        ],
+        spawnX: 1,
+        spawnY: 1,
+        width: 11,
+        height: 12
     }
 ];
 
@@ -248,6 +283,7 @@ function obj_button_update(obj) {
     var y = Math.floor(obj.y);
 
     var prevActive = !!obj.active; // two negations to convert to boolean
+    obj.btnid = default_value(obj.btnid, buttonID++); // set a button ID
 
     // check if its activated
     obj.active = (x == playerPosX && y == playerPosY) || get_tile(x, y) == 2;
@@ -257,6 +293,13 @@ function obj_button_update(obj) {
         for (var i = 0; i < currentTilemap.length; i++) {
             if (currentTilemap[i] == 3) currentTilemap[i] = 4;
         }
+    }
+
+    // check if other buttons are active
+    for (var i = 0; i < currentObjects.length; i++) {
+        if (currentObjects[i].id != "button") continue;
+        if (currentObjects[i].btnid == obj.btnid) continue; // IDs are identical
+        if (currentObjects[i].active) return; // another button is active, don't deactivate the blocks
     }
 
     // deactivate
@@ -487,6 +530,9 @@ function render_ui() {
         case UI_NONE:
             if (gui_button("Reset", -5, 5, 80, 80, TOP_RIGHT)) {
                 load_level(currentLevel);
+            }
+            if (currentLevel > 0 && currentLevel < levelData.length - 1) if (gui_button("Next", -90, 5, 80, 80, TOP_RIGHT)) {
+                load_level(++currentLevel);
             }
             if (!textHidden) if (gui_button("Hide Text", -90, 5, 160, 80, TOP_RIGHT)) {
                 textHidden = true;
