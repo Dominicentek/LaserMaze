@@ -249,22 +249,23 @@ var levelData = [
     {
         tilemap: [
             0,0,0,0,0,0,0,0,0,0,1,
-            0,0,0,0,0,0,1,1,1,0,1,
+            0,0,0,0,2,0,1,1,1,0,1,
             0,0,0,0,0,0,1,0,1,0,1,
-            1,1,1,1,1,1,1,3,0,0,0,
-            1,0,0,0,1,0,2,0,0,0,0,
+            1,1,0,1,1,3,1,3,0,0,0,
+            1,3,3,3,1,0,2,0,0,0,0,
             1,0,0,0,1,0,1,0,1,2,0,
             1,0,0,0,1,0,0,0,1,0,0,
         ],
         objects: [
             { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
             { id: "barrier", x: 8, y: 4, funcRender: obj_barrier_render, priority: -2 },
-            { id: "blue_portal", x: 6.5, y: 5, attached: { x: 6, y: 4 }, dir: DOWN, funcRender: obj_blue_portal_render },
-            { id: "orange_portal", x: 2.5, y: 4, dir: DOWN, funcRender: obj_orange_portal_render },
+            { id: "blue_portal", x: 9, y: 2.5, dir: RIGHT, funcRender: obj_blue_portal_render },
+            { id: "orange_portal", x: 4.5, y: 2, attached: { x: 4, y: 1 }, dir: DOWN, funcRender: obj_orange_portal_render },
             { id: "laser_emitter", x: 9.5, y: 5, attached: { x: 9, y: 5 }, dir: UP, flipped: true, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
             { id: "laser_receiver", x: 2.5, y: 7, dir: UP, funcRender: obj_laser_receiver_render },
-            { id: "mirror", x: 4, y: 5.5, vertical: true, funcRender: obj_mirror_render },
-            { id: "button", x: 8, y: 4, funcUpdate: obj_button_update, funcRender: obj_button_render, priority: -1 }
+            { id: "mirror", x: 1, y: 5.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "button", x: 8, y: 4, funcUpdate: obj_button_update, funcRender: obj_button_render, priority: -1 },
+            { id: "barrier", x: 2, y: 3, funcRender: obj_barrier_render, priority: -1 }
         ],
         spawnX: 1,
         spawnY: 1,
