@@ -178,6 +178,44 @@ var levelData = [
     },
     {
         tilemap: [
+            0,0,0,0,0,
+            0,0,0,0,0,
+            0,0,2,0,0,
+            0,0,0,0,0,
+            0,0,0,0,0,
+        ],
+        objects: [
+            { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
+            { id: "laser_emitter", x: 2.5, y: 2, attached: { x: 2, y: 2 }, dir: UP, flipped: false, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
+            { id: "laser_receiver", x: 2.5, y: 3, attached: { x: 2, y: 2 }, dir: DOWN, funcRender: obj_laser_receiver_render },
+            { id: "mirror", x: 0.5, y: 0, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 1.5, y: 0, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 2.5, y: 0, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 3.5, y: 0, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 4.5, y: 0, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 0.5, y: 5, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 1.5, y: 5, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 2.5, y: 5, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 3.5, y: 5, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 4.5, y: 5, vertical: false, funcRender: obj_mirror_render },
+            { id: "mirror", x: 0, y: 0.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 0, y: 1.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 0, y: 2.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 0, y: 3.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 0, y: 4.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 5, y: 0.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 5, y: 1.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 5, y: 2.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 5, y: 3.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "mirror", x: 5, y: 4.5, vertical: true, funcRender: obj_mirror_render },
+        ],
+        spawnX: 2,
+        spawnY: 1,
+        width: 5,
+        height: 5
+    },
+    {
+        tilemap: [
             0,0,0,0,0,0,0,1,1,1,1,
             0,0,0,2,0,0,0,1,0,0,0,
             0,0,0,0,0,0,0,1,0,0,0,
@@ -207,6 +245,39 @@ var levelData = [
         spawnY: 1,
         width: 11,
         height: 12
+    },
+    {
+        tilemap: [
+            0,0,0,0,0,0,0,0,0,0,1,
+            0,0,0,0,0,0,1,1,1,0,1,
+            0,0,0,0,0,0,1,0,1,0,1,
+            1,1,1,1,1,1,1,3,0,0,0,
+            1,0,0,0,1,0,2,0,0,0,0,
+            1,0,0,0,1,0,1,0,1,2,0,
+            1,0,0,0,1,0,0,0,1,0,0,
+        ],
+        objects: [
+            { id: "player", funcUpdate: obj_player_update, funcRender: obj_player_render, priority: 1 },
+            { id: "barrier", x: 8, y: 4, funcRender: obj_barrier_render, priority: -2 },
+            { id: "blue_portal", x: 6.5, y: 5, attached: { x: 6, y: 4 }, dir: DOWN, funcRender: obj_blue_portal_render },
+            { id: "orange_portal", x: 2.5, y: 4, dir: DOWN, funcRender: obj_orange_portal_render },
+            { id: "laser_emitter", x: 9.5, y: 5, attached: { x: 9, y: 5 }, dir: UP, flipped: true, funcUpdate: obj_laser_emitter_update, funcRender: obj_laser_emitter_render },
+            { id: "laser_receiver", x: 2.5, y: 7, dir: UP, funcRender: obj_laser_receiver_render },
+            { id: "mirror", x: 4, y: 5.5, vertical: true, funcRender: obj_mirror_render },
+            { id: "button", x: 8, y: 4, funcUpdate: obj_button_update, funcRender: obj_button_render, priority: -1 }
+        ],
+        spawnX: 1,
+        spawnY: 1,
+        width: 11,
+        height: 7
+    },
+    {
+        tilemap: [
+
+        ],
+        objects: [
+
+        ]
     }
 ];
 
