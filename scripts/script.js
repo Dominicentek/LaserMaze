@@ -1005,7 +1005,7 @@ function clone(obj) {
 };
 
 function load_level(id) {
-    textHidden = id == 0;
+    textHidden = id != 0;
     currentTilemap = clone(levelData[id].tilemap);
     currentObjects = clone(levelData[id].objects);
     playerPosX = levelData[id].spawnX;
