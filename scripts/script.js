@@ -609,7 +609,6 @@ function render_ui() {
             }
             if (gui_button("Tutorial", 0, 0, 256, 48, CENTER_CENTER)) {
                 uiScreen = UI_NONE;
-                textHidden = false;
                 load_level(currentLevel = 0);
             }
             if (gui_button("Quit",  0, 56, 256, 48, CENTER_CENTER)) {
@@ -1006,6 +1005,7 @@ function clone(obj) {
 };
 
 function load_level(id) {
+    textHidden = id == 0;
     currentTilemap = clone(levelData[id].tilemap);
     currentObjects = clone(levelData[id].objects);
     playerPosX = levelData[id].spawnX;
