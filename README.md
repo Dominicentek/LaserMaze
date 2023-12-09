@@ -1,5 +1,7 @@
 # LaserMaze
-A game written in JavaScript with a Java rendering backend powered by libGDX
+A puzzle game written in JavaScript with a Java rendering backend powered by libGDX
+
+Push boxes and use mirrors and portals to connect a laser emitted from a laser emitter to a laser receiver
 
 I would write this in a normal language but this is a school project and they forced me to use JavaScript.
 
