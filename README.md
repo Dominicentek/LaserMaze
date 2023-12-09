@@ -5,6 +5,12 @@ Push boxes and use mirrors and portals to connect a laser emitted from a laser e
 
 I would write this in a normal language but this is a school project and they forced me to use JavaScript.
 
+## Building
+
+1. Run `./gradlew dist` in the project directory
+2. The JAR should be located at `core/build/libs/core-1.0.jar`
+3. Run the JAR with Java 8 to Java 10
+
 ## Java backend
 
 This backend is mainly used for rendering, however, it also includes functionality for the keyboard input and mouse positions.
