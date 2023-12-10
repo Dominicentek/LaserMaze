@@ -242,6 +242,7 @@ Proměnná `currentObjects` obsahuje data herních objektů. Herní objekt je Ja
 * `priority = 0` - vykreslovací priorita pro tento herní objekt. Herní objekty z nižší prioritou se aktualizují a vykreslují první
 
 \* Herní objekt `player` může mýt tyto hodnoty nastavené jako `undefined`
+
 ? Tato hodnota může být nastavená jako `undefined` v každém herním objektu
 
 ### `laser_emitter`

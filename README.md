@@ -244,6 +244,7 @@ The `currentObjects` array contains object data, which is an object with properi
 * `priority = 0` - rendering priority for the object, an object with lower priority gets rendered and updated first
 
 \* The `player` object can have these `undefined`
+
 ? Can be `undefined` in any objeect
 
 ### `laser_emitter`
